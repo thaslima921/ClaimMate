@@ -1,0 +1,1432 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ClaimMate - AI Welfare Scheme Discovery Companion</title>
+    <!-- Google Font: Inter -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <!-- FontAwesome icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <style>
+        :root {
+            --bg-primary: #0b0f19;
+            --glass-bg: rgba(22, 28, 48, 0.65);
+            --glass-header: rgba(30, 41, 59, 0.6);
+            --glass-border: rgba(255, 255, 255, 0.08);
+            --accent-indigo: #6366f1;
+            --accent-violet: #8b5cf6;
+            --accent-cyan: #06b6d4;
+            --accent-teal: #10b981;
+            --text-primary: #f8fafc;
+            --text-secondary: #94a3b8;
+            --text-muted: #64748b;
+            
+            --user-bubble-bg: linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%);
+            --bot-bubble-bg: rgba(30, 41, 59, 0.55);
+            --shadow-premium: 0 16px 40px -10px rgba(0, 0, 0, 0.4);
+            --shadow-glow: 0 0 20px rgba(99, 102, 241, 0.2);
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: 'Inter', sans-serif;
+            -webkit-font-smoothing: antialiased;
+        }
+
+        body {
+            background-color: var(--bg-primary);
+            height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            overflow: hidden;
+            position: relative;
+        }
+
+        /* Abstract glowing blobs for premium feel */
+        .glow-blob {
+            position: absolute;
+            border-radius: 50%;
+            filter: blur(140px);
+            z-index: 1;
+            opacity: 0.4;
+            pointer-events: none;
+            animation: float 25s infinite alternate ease-in-out;
+        }
+
+        .blob-1 {
+            width: 400px;
+            height: 400px;
+            background: var(--accent-indigo);
+            top: -10%;
+            left: 10%;
+        }
+
+        .blob-2 {
+            width: 500px;
+            height: 500px;
+            background: var(--accent-cyan);
+            bottom: -15%;
+            right: 10%;
+            animation-delay: -5s;
+        }
+
+        .blob-3 {
+            width: 300px;
+            height: 300px;
+            background: var(--accent-violet);
+            top: 40%;
+            left: 50%;
+            animation-delay: -10s;
+        }
+
+        @keyframes float {
+            0% { transform: translate(0, 0) scale(1); }
+            50% { transform: translate(30px, -50px) scale(1.15); }
+            100% { transform: translate(-20px, 20px) scale(0.9); }
+        }
+
+        /* Main Container layout */
+        .app-wrapper {
+            width: 92%;
+            max-width: 1200px;
+            height: calc(100vh - 60px);
+            display: flex;
+            gap: 24px;
+            z-index: 10;
+        }
+
+        @media (max-width: 900px) {
+            .app-wrapper {
+                width: 100%;
+                height: 100vh;
+                gap: 0;
+            }
+        }
+
+        /* Sidebar: Progress Tracker */
+        .sidebar {
+            flex: 0 0 320px;
+            background: var(--glass-bg);
+            border: 1px solid var(--glass-border);
+            border-radius: 16px;
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            box-shadow: var(--shadow-premium);
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+        }
+
+        .sidebar-header {
+            padding: 24px;
+            border-bottom: 1px solid var(--glass-border);
+            background: var(--glass-header);
+        }
+
+        .sidebar-header h2 {
+            font-size: 18px;
+            font-weight: 700;
+            color: var(--text-primary);
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .sidebar-header h2 i {
+            color: var(--accent-cyan);
+            text-shadow: 0 0 10px rgba(6, 182, 212, 0.4);
+        }
+
+        .sidebar-header p {
+            font-size: 12px;
+            color: var(--text-secondary);
+            margin-top: 6px;
+            line-height: 1.4;
+        }
+
+        .progress-timeline {
+            flex: 1;
+            padding: 24px;
+            overflow-y: auto;
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+        }
+
+        .timeline-item {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+            position: relative;
+            opacity: 0.5;
+            transition: all 0.3s ease;
+        }
+
+        .timeline-item::after {
+            content: '';
+            position: absolute;
+            left: 20px;
+            top: 40px;
+            width: 2px;
+            height: 20px;
+            background: rgba(255, 255, 255, 0.05);
+            z-index: 1;
+        }
+
+        .timeline-item:last-child::after {
+            display: none;
+        }
+
+        .timeline-item.active {
+            opacity: 1;
+        }
+
+        .timeline-item.completed {
+            opacity: 1;
+        }
+
+        .timeline-marker {
+            width: 42px;
+            height: 42px;
+            border-radius: 50%;
+            background: rgba(30, 41, 59, 0.8);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-size: 14px;
+            color: var(--text-secondary);
+            z-index: 2;
+            transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        }
+
+        .timeline-item.active .timeline-marker {
+            border-color: var(--accent-cyan);
+            color: var(--accent-cyan);
+            box-shadow: 0 0 12px rgba(6, 182, 212, 0.3);
+            animation: pulse-border 2s infinite;
+        }
+
+        .timeline-item.completed .timeline-marker {
+            background: var(--accent-indigo);
+            border-color: var(--accent-indigo);
+            color: white;
+            box-shadow: 0 0 12px rgba(99, 102, 241, 0.4);
+        }
+
+        .timeline-content {
+            display: flex;
+            flex-direction: column;
+            gap: 2px;
+        }
+
+        .timeline-label {
+            font-size: 11px;
+            text-transform: uppercase;
+            letter-spacing: 0.8px;
+            color: var(--text-muted);
+            font-weight: 600;
+        }
+
+        .timeline-value {
+            font-size: 14px;
+            color: var(--text-secondary);
+            font-weight: 500;
+            transition: color 0.3s;
+        }
+
+        .timeline-item.completed .timeline-value {
+            color: var(--text-primary);
+        }
+
+        @keyframes pulse-border {
+            0% { box-shadow: 0 0 0 0 rgba(6, 182, 212, 0.4); }
+            70% { box-shadow: 0 0 0 8px rgba(6, 182, 212, 0); }
+            100% { box-shadow: 0 0 0 0 rgba(6, 182, 212, 0); }
+        }
+
+        @media (max-width: 900px) {
+            .sidebar {
+                display: none; /* Hide on mobile/tablet */
+            }
+        }
+
+        /* Chat Container Panel */
+        .chat-container {
+            flex: 1;
+            background: var(--glass-bg);
+            border: 1px solid var(--glass-border);
+            border-radius: 16px;
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            box-shadow: var(--shadow-premium);
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+            position: relative;
+        }
+
+        @media (max-width: 900px) {
+            .chat-container {
+                border-radius: 0;
+                border: none;
+            }
+        }
+
+        /* Header */
+        .chat-header {
+            background: var(--glass-header);
+            border-bottom: 1px solid var(--glass-border);
+            padding: 16px 24px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            z-index: 10;
+        }
+
+        .header-left {
+            display: flex;
+            align-items: center;
+            gap: 14px;
+        }
+
+        .avatar-glow {
+            width: 44px;
+            height: 44px;
+            background: linear-gradient(135deg, var(--accent-indigo), var(--accent-violet));
+            border-radius: 50%;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-size: 18px;
+            color: #fff;
+            box-shadow: var(--shadow-glow);
+        }
+
+        .bot-info {
+            display: flex;
+            flex-direction: column;
+            gap: 2px;
+        }
+
+        .bot-name {
+            font-weight: 600;
+            font-size: 16px;
+            color: var(--text-primary);
+        }
+
+        .bot-status {
+            font-size: 11px;
+            color: var(--accent-cyan);
+            font-weight: 500;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .bot-status::before {
+            content: '';
+            display: inline-block;
+            width: 6px;
+            height: 6px;
+            background-color: var(--accent-teal);
+            border-radius: 50%;
+            box-shadow: 0 0 8px var(--accent-teal);
+        }
+
+        .header-actions {
+            display: flex;
+            gap: 16px;
+            color: var(--text-secondary);
+            font-size: 16px;
+        }
+
+        .header-actions i {
+            cursor: pointer;
+            padding: 8px;
+            border-radius: 50%;
+            transition: background 0.2s, color 0.2s;
+        }
+
+        .header-actions i:hover {
+            background: rgba(255, 255, 255, 0.05);
+            color: var(--text-primary);
+        }
+
+        /* Message Area */
+        .chat-messages {
+            flex: 1;
+            padding: 24px;
+            overflow-y: auto;
+            display: flex;
+            flex-direction: column;
+            gap: 16px;
+        }
+
+        .message-row {
+            display: flex;
+            width: 100%;
+        }
+
+        .message-row.user {
+            justify-content: flex-end;
+        }
+
+        .message-row.bot {
+            justify-content: flex-start;
+        }
+
+        .bubble {
+            max-width: 70%;
+            padding: 12px 16px;
+            border-radius: 12px;
+            font-size: 14.5px;
+            line-height: 1.5;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+            word-wrap: break-word;
+            white-space: pre-wrap;
+            position: relative;
+        }
+
+        .message-row.bot .bubble {
+            background-color: var(--bot-bubble-bg);
+            color: var(--text-primary);
+            border: 1px solid rgba(255, 255, 255, 0.04);
+            border-top-left-radius: 2px;
+        }
+
+        .message-row.user .bubble {
+            background: var(--user-bubble-bg);
+            color: #ffffff;
+            border-top-right-radius: 2px;
+            box-shadow: var(--shadow-glow);
+        }
+
+        /* Message animation only on active insertion */
+        .bubble.animated {
+            animation: slideIn 0.25s cubic-bezier(0.1, 0.8, 0.3, 1) forwards;
+        }
+
+        @keyframes slideIn {
+            from { opacity: 0; transform: translateY(12px) scale(0.98); }
+            to { opacity: 1; transform: translateY(0) scale(1); }
+        }
+
+        .bubble-time {
+            font-size: 9.5px;
+            color: var(--text-muted);
+            text-align: right;
+            margin-top: 6px;
+            display: block;
+            font-weight: 500;
+        }
+
+        .message-row.user .bubble-time {
+            color: rgba(255, 255, 255, 0.6);
+        }
+
+        /* Markdown styling inside bubble */
+        .bubble strong {
+            font-weight: 700;
+            color: #fff;
+        }
+        
+        .bubble a {
+            color: var(--accent-cyan);
+            font-weight: 600;
+            text-decoration: none;
+            border-bottom: 1px dashed var(--accent-cyan);
+        }
+        
+        .bubble a:hover {
+            color: #fff;
+            border-bottom-style: solid;
+        }
+
+        /* Schemes Container grid */
+        .schemes-container {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+            gap: 16px;
+            margin-top: 10px;
+            width: 100%;
+        }
+
+        .scheme-card {
+            background: rgba(30, 41, 59, 0.45);
+            border: 1px solid rgba(255, 255, 255, 0.05);
+            border-left: 4px solid var(--accent-cyan);
+            border-radius: 10px;
+            padding: 16px;
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+            transition: all 0.3s cubic-bezier(0.165, 0.84, 0.44, 1);
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+        }
+
+        .scheme-card:hover {
+            transform: translateY(-4px);
+            border-color: rgba(6, 182, 212, 0.3);
+            border-left-color: var(--accent-cyan);
+            background: rgba(30, 41, 59, 0.65);
+            box-shadow: 0 8px 24px rgba(6, 182, 212, 0.15);
+        }
+
+        .scheme-card-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            gap: 8px;
+        }
+
+        .scheme-title {
+            font-weight: 600;
+            font-size: 14.5px;
+            color: var(--text-primary);
+            line-height: 1.3;
+        }
+
+        .scheme-badge {
+            background-color: rgba(6, 182, 212, 0.15);
+            border: 1px solid rgba(6, 182, 212, 0.2);
+            color: var(--accent-cyan);
+            font-size: 10px;
+            padding: 2px 6px;
+            border-radius: 12px;
+            font-weight: 600;
+            white-space: nowrap;
+        }
+
+        .scheme-desc {
+            font-size: 12.5px;
+            color: var(--text-secondary);
+            line-height: 1.4;
+            flex-grow: 1;
+        }
+
+        .scheme-footer {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-top: 8px;
+            border-top: 1px solid rgba(255, 255, 255, 0.05);
+            padding-top: 8px;
+        }
+
+        .scheme-info-item {
+            font-size: 11px;
+            color: var(--text-muted);
+            display: flex;
+            align-items: center;
+            gap: 4px;
+        }
+
+        .scheme-btn {
+            background: linear-gradient(135deg, var(--accent-indigo), var(--accent-violet));
+            color: white;
+            border: none;
+            padding: 6px 12px;
+            border-radius: 6px;
+            font-size: 11.5px;
+            font-weight: 600;
+            cursor: pointer;
+            box-shadow: 0 0 10px rgba(99, 102, 241, 0.3);
+            transition: all 0.2s ease;
+            display: flex;
+            align-items: center;
+            gap: 4px;
+        }
+
+        .scheme-btn:hover {
+            transform: scale(1.04);
+            box-shadow: 0 0 14px rgba(99, 102, 241, 0.55);
+        }
+
+        /* Quick Replies Area */
+        .quick-replies-wrapper {
+            padding: 12px 24px;
+            background: rgba(15, 23, 42, 0.4);
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+            justify-content: center;
+            border-top: 1px solid var(--glass-border);
+            z-index: 5;
+        }
+
+        .quick-reply-pill {
+            background-color: rgba(30, 41, 59, 0.5);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            color: var(--text-secondary);
+            padding: 8px 16px;
+            border-radius: 20px;
+            font-size: 13.5px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.25s ease;
+        }
+
+        .quick-reply-pill:hover {
+            background-color: var(--accent-indigo);
+            border-color: var(--accent-indigo);
+            color: #ffffff;
+            transform: translateY(-2px);
+            box-shadow: var(--shadow-glow);
+        }
+
+        /* State Dropdown selector */
+        .dropdown-container {
+            display: none;
+            width: 100%;
+            padding: 12px 24px;
+            background-color: rgba(15, 23, 42, 0.5);
+            align-items: center;
+            gap: 12px;
+            border-top: 1px solid var(--glass-border);
+        }
+
+        .state-select {
+            flex: 1;
+            height: 44px;
+            border-radius: 12px;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            padding: 0 16px;
+            font-size: 14.5px;
+            background-color: rgba(30, 41, 59, 0.85);
+            color: var(--text-primary);
+            outline: none;
+            cursor: pointer;
+            appearance: none;
+            -webkit-appearance: none;
+            background-image: url("data:image/svg+xml;charset=utf-8,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%2394a3b8' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E");
+            background-repeat: no-repeat;
+            background-position: right 16px center;
+            background-size: 16px;
+        }
+
+        .state-select option {
+            background-color: #1e293b;
+            color: #f8fafc;
+        }
+
+        /* Input Area panel */
+        .chat-input-area {
+            background: var(--glass-header);
+            padding: 16px 24px;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            z-index: 10;
+            border-top: 1px solid var(--glass-border);
+        }
+
+        .input-wrapper {
+            flex: 1;
+            position: relative;
+        }
+
+        .chat-input {
+            width: 100%;
+            height: 46px;
+            background-color: rgba(15, 23, 42, 0.6);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            outline: none;
+            border-radius: 12px;
+            padding: 0 20px;
+            font-size: 14.5px;
+            color: var(--text-primary);
+            transition: all 0.3s;
+        }
+
+        .chat-input:focus {
+            border-color: var(--accent-indigo);
+            box-shadow: 0 0 10px rgba(99, 102, 241, 0.25);
+            background-color: rgba(15, 23, 42, 0.85);
+        }
+
+        .send-btn {
+            width: 46px;
+            height: 46px;
+            background: linear-gradient(135deg, var(--accent-indigo), var(--accent-violet));
+            color: #fff;
+            border: none;
+            border-radius: 12px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-size: 16px;
+            cursor: pointer;
+            box-shadow: var(--shadow-glow);
+            transition: all 0.2s ease;
+        }
+
+        .send-btn:hover {
+            transform: scale(1.05);
+            box-shadow: 0 0 18px rgba(99, 102, 241, 0.55);
+        }
+
+        .send-btn:active {
+            transform: scale(0.95);
+        }
+
+        /* Typing Dots Indicator */
+        .typing-bubble {
+            background-color: var(--bot-bubble-bg);
+            border: 1px solid rgba(255, 255, 255, 0.04);
+            padding: 14px 18px;
+            border-radius: 12px;
+            border-top-left-radius: 2px;
+            display: flex;
+            align-items: center;
+            gap: 5px;
+            width: 65px;
+            margin-bottom: 4px;
+        }
+
+        .dot {
+            width: 6px;
+            height: 6px;
+            background-color: var(--accent-cyan);
+            border-radius: 50%;
+            animation: bounce 1.3s infinite ease-in-out;
+            box-shadow: 0 0 8px var(--accent-cyan);
+        }
+
+        .dot:nth-child(2) {
+            animation-delay: 0.15s;
+        }
+
+        .dot:nth-child(3) {
+            animation-delay: 0.3s;
+        }
+
+        @keyframes bounce {
+            0%, 60%, 100% { transform: translateY(0); }
+            30% { transform: translateY(-6px); }
+        }
+
+        /* Scrollbar customizing */
+        ::-webkit-scrollbar {
+            width: 6px;
+            height: 6px;
+        }
+
+        ::-webkit-scrollbar-track {
+            background: transparent;
+        }
+
+        ::-webkit-scrollbar-thumb {
+            background-color: rgba(255, 255, 255, 0.1);
+            border-radius: 3px;
+        }
+
+        ::-webkit-scrollbar-thumb:hover {
+            background-color: rgba(255, 255, 255, 0.2);
+        }
+
+        /* Scheme details modal dialog overlay */
+        .modal-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(10, 15, 29, 0.7);
+            backdrop-filter: blur(8px);
+            z-index: 100;
+            display: none;
+            justify-content: center;
+            align-items: center;
+            opacity: 0;
+            transition: opacity 0.3s ease;
+        }
+
+        .modal-overlay.open {
+            display: flex;
+            opacity: 1;
+        }
+
+        .modal-content {
+            background: rgba(22, 28, 48, 0.95);
+            border: 1px solid var(--glass-border);
+            border-radius: 16px;
+            width: 90%;
+            max-width: 580px;
+            box-shadow: var(--shadow-premium), 0 0 30px rgba(99, 102, 241, 0.1);
+            overflow: hidden;
+            transform: scale(0.9);
+            transition: transform 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.15);
+            position: relative;
+        }
+
+        .modal-overlay.open .modal-content {
+            transform: scale(1);
+        }
+
+        .modal-close {
+            position: absolute;
+            top: 16px;
+            right: 20px;
+            background: transparent;
+            border: none;
+            color: var(--text-secondary);
+            font-size: 24px;
+            cursor: pointer;
+            transition: color 0.2s;
+        }
+
+        .modal-close:hover {
+            color: var(--text-primary);
+        }
+
+        .modal-header {
+            padding: 24px;
+            background: var(--glass-header);
+            border-bottom: 1px solid var(--glass-border);
+        }
+
+        .modal-badge {
+            display: inline-block;
+            background: rgba(6, 182, 212, 0.15);
+            border: 1px solid rgba(6, 182, 212, 0.2);
+            color: var(--accent-cyan);
+            font-size: 11px;
+            padding: 2px 8px;
+            border-radius: 12px;
+            font-weight: 600;
+            margin-bottom: 8px;
+        }
+
+        .modal-header h3 {
+            font-size: 18px;
+            color: var(--text-primary);
+            font-weight: 700;
+            line-height: 1.3;
+        }
+
+        .modal-header p {
+            font-size: 13px;
+            color: var(--text-secondary);
+            margin-top: 4px;
+        }
+
+        .modal-body {
+            padding: 24px;
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+            max-height: 380px;
+            overflow-y: auto;
+        }
+
+        .modal-section {
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+        }
+
+        .modal-section h4 {
+            font-size: 13.5px;
+            color: var(--accent-cyan);
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            text-transform: uppercase;
+            letter-spacing: 0.6px;
+        }
+
+        .modal-section p {
+            font-size: 14px;
+            color: var(--text-secondary);
+            line-height: 1.5;
+        }
+
+        .modal-footer {
+            padding: 16px 24px;
+            border-top: 1px solid var(--glass-border);
+            display: flex;
+            justify-content: flex-end;
+            background: var(--glass-header);
+        }
+
+        .modal-apply-btn {
+            background: linear-gradient(135deg, var(--accent-indigo), var(--accent-violet));
+            color: #fff;
+            padding: 10px 20px;
+            border-radius: 8px;
+            font-size: 13.5px;
+            font-weight: 600;
+            text-decoration: none;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            transition: all 0.2s;
+            box-shadow: var(--shadow-glow);
+        }
+
+        .modal-apply-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 0 16px rgba(99, 102, 241, 0.5);
+        }
+    </style>
+</head>
+<body>
+
+    <!-- Dynamic glowing blobs in the background -->
+    <div class="glow-blob blob-1"></div>
+    <div class="glow-blob blob-2"></div>
+    <div class="glow-blob blob-3"></div>
+
+    <div class="app-wrapper">
+        <!-- Sidebar Dashboard -->
+        <aside class="sidebar">
+            <div class="sidebar-header">
+                <h2><i class="fa-solid fa-circle-check"></i> ClaimMate Discovery</h2>
+                <p>Verify your details to scan government databases for matching welfare schemes.</p>
+            </div>
+            
+            <div class="progress-timeline">
+                <div class="timeline-item" id="timeline-name">
+                    <div class="timeline-marker"><i class="fa-solid fa-user"></i></div>
+                    <div class="timeline-content">
+                        <span class="timeline-label">Name</span>
+                        <span class="timeline-value" id="val-name">-</span>
+                    </div>
+                </div>
+                <div class="timeline-item" id="timeline-age">
+                    <div class="timeline-marker"><i class="fa-solid fa-calendar"></i></div>
+                    <div class="timeline-content">
+                        <span class="timeline-label">Age</span>
+                        <span class="timeline-value" id="val-age">-</span>
+                    </div>
+                </div>
+                <div class="timeline-item" id="timeline-gender">
+                    <div class="timeline-marker"><i class="fa-solid fa-venus-mars"></i></div>
+                    <div class="timeline-content">
+                        <span class="timeline-label">Gender</span>
+                        <span class="timeline-value" id="val-gender">-</span>
+                    </div>
+                </div>
+                <div class="timeline-item" id="timeline-category">
+                    <div class="timeline-marker"><i class="fa-solid fa-tags"></i></div>
+                    <div class="timeline-content">
+                        <span class="timeline-label">Social Category</span>
+                        <span class="timeline-value" id="val-category">-</span>
+                    </div>
+                </div>
+                <div class="timeline-item" id="timeline-income">
+                    <div class="timeline-marker"><i class="fa-solid fa-wallet"></i></div>
+                    <div class="timeline-content">
+                        <span class="timeline-label">Annual Income</span>
+                        <span class="timeline-value" id="val-income">-</span>
+                    </div>
+                </div>
+                <div class="timeline-item" id="timeline-state">
+                    <div class="timeline-marker"><i class="fa-solid fa-map-marker-alt"></i></div>
+                    <div class="timeline-content">
+                        <span class="timeline-label">State / UT</span>
+                        <span class="timeline-value" id="val-state">-</span>
+                    </div>
+                </div>
+                <div class="timeline-item" id="timeline-occupation">
+                    <div class="timeline-marker"><i class="fa-solid fa-briefcase"></i></div>
+                    <div class="timeline-content">
+                        <span class="timeline-label">Occupation</span>
+                        <span class="timeline-value" id="val-occupation">-</span>
+                    </div>
+                </div>
+            </div>
+        </aside>
+
+        <!-- Right Panel Chat Window -->
+        <main class="chat-container">
+            <!-- Header -->
+            <header class="chat-header">
+                <div class="header-left">
+                    <div class="avatar-glow">
+                        <i class="fa-solid fa-robot"></i>
+                    </div>
+                    <div class="bot-info">
+                        <span class="bot-name">ClaimMate AI</span>
+                        <span class="bot-status">Online Assistant</span>
+                    </div>
+                </div>
+                <div class="header-actions">
+                    <i class="fa-solid fa-rotate-left" title="Start Over" onclick="sendQuickReply('Start Over')"></i>
+                    <i class="fa-solid fa-ellipsis-vertical" title="Menu"></i>
+                </div>
+            </header>
+
+            <!-- Message Area -->
+            <div class="chat-messages" id="chatMessages">
+                <!-- Messages are inserted dynamically -->
+            </div>
+
+            <!-- Quick Replies -->
+            <div class="quick-replies-wrapper" id="quickRepliesArea" style="display: none;">
+                <!-- Dynamically generated pills -->
+            </div>
+
+            <!-- Custom State Dropdown selection (Step 6) -->
+            <div class="dropdown-container" id="stateDropdownArea">
+                <select class="state-select" id="stateSelectInput">
+                    <option value="" disabled selected>Select your state / UT...</option>
+                </select>
+                <button class="send-btn" id="stateSendBtn">
+                    <i class="fa-solid fa-paper-plane"></i>
+                </button>
+            </div>
+
+            <!-- Classic text input bar -->
+            <div class="chat-input-area" id="textInputArea">
+                <div class="input-wrapper">
+                    <input type="text" class="chat-input" id="messageInput" placeholder="Type a message..." autocomplete="off">
+                </div>
+                <button class="send-btn" id="sendBtn">
+                    <i class="fa-solid fa-paper-plane"></i>
+                </button>
+            </div>
+        </main>
+    </div>
+
+    <!-- Scheme Details Modal Dialog -->
+    <div class="modal-overlay" id="detailsModal">
+        <div class="modal-content">
+            <button class="modal-close" id="modalCloseBtn">&times;</button>
+            <div class="modal-header">
+                <span class="modal-badge" id="modalBadge">Central</span>
+                <h3 id="modalTitle">Scheme Title</h3>
+                <p id="modalMinistry">Ministry Name</p>
+            </div>
+            <div class="modal-body">
+                <div class="modal-section">
+                    <h4><i class="fa-solid fa-file-lines"></i> What it is</h4>
+                    <p id="modalDesc">-</p>
+                </div>
+                <div class="modal-section">
+                    <h4><i class="fa-solid fa-gift"></i> Scheme Benefits</h4>
+                    <p id="modalBenefits">-</p>
+                </div>
+                <div class="modal-section">
+                    <h4><i class="fa-solid fa-folder-open"></i> Documents Required</h4>
+                    <p id="modalDocs">-</p>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <a class="modal-apply-btn" id="modalApplyBtn" href="#" target="_blank">
+                    Visit Official Portal <i class="fa-solid fa-up-right-from-square"></i>
+                </a>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const chatMessages = document.getElementById('chatMessages');
+        const messageInput = document.getElementById('messageInput');
+        const sendBtn = document.getElementById('sendBtn');
+        const quickRepliesArea = document.getElementById('quickRepliesArea');
+        
+        const textInputArea = document.getElementById('textInputArea');
+        const stateDropdownArea = document.getElementById('stateDropdownArea');
+        const stateSelectInput = document.getElementById('stateSelectInput');
+        const stateSendBtn = document.getElementById('stateSendBtn');
+
+        const detailsModal = document.getElementById('detailsModal');
+        const modalCloseBtn = document.getElementById('modalCloseBtn');
+        const modalTitle = document.getElementById('modalTitle');
+        const modalBadge = document.getElementById('modalBadge');
+        const modalMinistry = document.getElementById('modalMinistry');
+        const modalDesc = document.getElementById('modalDesc');
+        const modalBenefits = document.getElementById('modalBenefits');
+        const modalDocs = document.getElementById('modalDocs');
+        const modalApplyBtn = document.getElementById('modalApplyBtn');
+
+        let currentStep = 1;
+        let activeSchemes = []; // Store current matched schemes to view details
+        
+        // Resolve session ID from local storage
+        let sessionId = localStorage.getItem('claimmate_session_id');
+        if (!sessionId) {
+            sessionId = 'session_' + Math.random().toString(36).substring(2, 11);
+            localStorage.setItem('claimmate_session_id', sessionId);
+        }
+
+        const INDIAN_STATES = [
+            "Andhra Pradesh", "Arunachal Pradesh", "Assam", "Bihar", "Chhattisgarh", "Goa", 
+            "Gujarat", "Haryana", "Himachal Pradesh", "Jharkhand", "Karnataka", "Kerala", 
+            "Madhya Pradesh", "Maharashtra", "Manipur", "Meghalaya", "Mizoram", "Nagaland", 
+            "Odisha", "Punjab", "Rajasthan", "Sikkim", "Tamil Nadu", "Telangana", "Tripura", 
+            "Uttar Pradesh", "Uttarakhand", "West Bengal", "Andaman and Nicobar Islands", 
+            "Chandigarh", "Dadra and Nagar Haveli and Daman and Diu", "Delhi", "Jammu and Kashmir", 
+            "Ladakh", "Lakshadweep", "Puducherry"
+        ];
+
+        // Populate dropdown menu options
+        INDIAN_STATES.forEach(state => {
+            const option = document.createElement('option');
+            option.value = state;
+            option.textContent = state;
+            stateSelectInput.appendChild(option);
+        });
+
+        // Initialize Chat and fetch history
+        window.addEventListener('DOMContentLoaded', async () => {
+            await fetchHistory();
+        });
+
+        // Helper to format timestamp
+        function getFormattedTime() {
+            const date = new Date();
+            let hours = date.getHours();
+            let minutes = date.getMinutes();
+            const ampm = hours >= 12 ? 'PM' : 'AM';
+            hours = hours % 12;
+            hours = hours ? hours : 12; 
+            minutes = minutes < 10 ? '0'+minutes : minutes;
+            return hours + ':' + minutes + ' ' + ampm;
+        }
+
+        // Fetch session history from API
+        async function fetchHistory() {
+            showTypingIndicator();
+            try {
+                const response = await fetch(`/chat/history?session_id=${sessionId}`);
+                if (!response.ok) throw new Error("History fetch failed");
+                const data = await response.json();
+                
+                removeTypingIndicator();
+                
+                // Clear chat display
+                chatMessages.innerHTML = '';
+                
+                if (data.messages && data.messages.length > 0) {
+                    // Populate past messages
+                    data.messages.forEach(msg => {
+                        appendMessage(msg.text, msg.sender === 'user', msg.schemes, true);
+                    });
+                    
+                    // Restore profile timelines
+                    updateProfileDashboard(data.profile, data.step);
+                    
+                    // Set latest step controls
+                    currentStep = data.step;
+                    const lastMsg = data.messages[data.messages.length - 1];
+                    let quickReplies = null;
+                    if (lastMsg && lastMsg.sender === 'bot') {
+                        quickReplies = lastMsg.quick_replies;
+                    }
+                    toggleInputControls(data.step, quickReplies);
+                } else {
+                    // Start fresh chat
+                    sendPayload("");
+                }
+            } catch (error) {
+                console.error("Error fetching history:", error);
+                removeTypingIndicator();
+                // Fallback to fresh start
+                sendPayload("");
+            }
+        }
+
+        // Add a message bubble to the chat container
+        function appendMessage(text, isUser = false, matchedSchemes = null, skipAnimation = false) {
+            const row = document.createElement('div');
+            row.className = `message-row ${isUser ? 'user' : 'bot'}`;
+
+            const bubble = document.createElement('div');
+            bubble.className = `bubble ${skipAnimation ? '' : 'animated'}`;
+            
+            // Format basic markdown elements
+            let formattedText = text
+                .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
+                .replace(/\*(.*?)\*/g, '<em>$1</em>')
+                .replace(/\[(.*?)\]\((.*?)\)/g, '<a href="$2" target="_blank">$1</a>');
+
+            bubble.innerHTML = formattedText;
+
+            const timeSpan = document.createElement('span');
+            timeSpan.className = 'bubble-time';
+            timeSpan.innerText = getFormattedTime();
+            bubble.appendChild(timeSpan);
+            
+            row.appendChild(bubble);
+            chatMessages.appendChild(row);
+            
+            // If message contains matched schemes, render cards
+            if (!isUser && matchedSchemes && matchedSchemes.length > 0) {
+                renderSchemeCards(matchedSchemes);
+                // Cache active schemes globally for modal lookup
+                activeSchemes = matchedSchemes;
+            }
+            
+            scrollToBottom();
+        }
+
+        // Render card layout for schemes
+        function renderSchemeCards(schemes) {
+            const container = document.createElement('div');
+            container.className = 'schemes-container';
+            
+            schemes.forEach((scheme, index) => {
+                const num = index + 1;
+                const card = document.createElement('div');
+                card.className = 'scheme-card';
+                
+                card.innerHTML = `
+                    <div class="scheme-card-header">
+                        <span class="scheme-title">${num}. ${scheme.name}</span>
+                        <span class="scheme-badge">${scheme.state}</span>
+                    </div>
+                    <p class="scheme-desc">${scheme.description || ''}</p>
+                    <div class="scheme-footer">
+                        <span class="scheme-info-item"><i class="fa-solid fa-building"></i> ${scheme.ministry || 'Government'}</span>
+                        <button class="scheme-btn" onclick="openDetailsModal(${index})">
+                            <i class="fa-solid fa-circle-info"></i> Details
+                        </button>
+                    </div>
+                `;
+                container.appendChild(card);
+            });
+            
+            chatMessages.appendChild(container);
+            scrollToBottom();
+        }
+
+        // Show/hide typing indicator
+        let typingIndicator = null;
+        function showTypingIndicator() {
+            if (typingIndicator) return;
+            
+            const row = document.createElement('div');
+            row.className = 'message-row bot';
+            row.id = 'typingRow';
+
+            const bubble = document.createElement('div');
+            bubble.className = 'typing-bubble';
+            bubble.innerHTML = `
+                <div class="dot"></div>
+                <div class="dot"></div>
+                <div class="dot"></div>
+            `;
+            
+            row.appendChild(bubble);
+            chatMessages.appendChild(row);
+            typingIndicator = row;
+            scrollToBottom();
+        }
+
+        function removeTypingIndicator() {
+            if (typingIndicator) {
+                typingIndicator.remove();
+                typingIndicator = null;
+            }
+        }
+
+        // Scroll helper
+        function scrollToBottom() {
+            chatMessages.scrollTop = chatMessages.scrollHeight;
+        }
+
+        // Send payload to FastAPI
+        async function sendPayload(messageText) {
+            showTypingIndicator();
+            quickRepliesArea.style.display = 'none';
+
+            try {
+                const response = await fetch('/chat', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        session_id: sessionId,
+                        message: messageText
+                    })
+                });
+
+                if (!response.ok) {
+                    throw new Error('Network response was not ok');
+                }
+
+                const data = await response.json();
+                
+                removeTypingIndicator();
+                currentStep = data.step;
+                
+                // Render bot reply
+                appendMessage(data.reply, false, data.schemes);
+
+                // Fetch latest state to update sidebar dashboard
+                await syncProfileDashboard(data.step);
+
+                // Toggle controls
+                toggleInputControls(data.step, data.quick_replies);
+
+            } catch (error) {
+                console.error('Error sending message:', error);
+                removeTypingIndicator();
+                appendMessage("Sorry, I am facing trouble connecting to the server. Please try again later.", false);
+                toggleInputControls(1, ["Start Over"]);
+            }
+        }
+
+        // Fetch latest session metadata to sync sidebar
+        async function syncProfileDashboard(step) {
+            try {
+                const response = await fetch(`/chat/history?session_id=${sessionId}`);
+                if (response.ok) {
+                    const data = await response.json();
+                    updateProfileDashboard(data.profile, step);
+                }
+            } catch (e) {
+                console.error("Failed to sync dashboard:", e);
+            }
+        }
+
+        // Update CSS state and values on progress sidebar
+        function updateProfileDashboard(profile, step) {
+            const steps = [
+                { key: 'name', elVal: 'val-name', elItem: 'timeline-name', suffix: '' },
+                { key: 'age', elVal: 'val-age', elItem: 'timeline-age', suffix: ' years' },
+                { key: 'gender', elVal: 'val-gender', elItem: 'timeline-gender', suffix: '' },
+                { key: 'category', elVal: 'val-category', elItem: 'timeline-category', suffix: '' },
+                { key: 'income', elVal: 'val-income', elItem: 'timeline-income', prefix: '₹ ', format: true },
+                { key: 'state', elVal: 'val-state', elItem: 'timeline-state', suffix: '' },
+                { key: 'occupation', elVal: 'val-occupation', elItem: 'timeline-occupation', suffix: '' }
+            ];
+
+            steps.forEach((stepMeta, index) => {
+                const val = profile[stepMeta.key];
+                const elementValue = document.getElementById(stepMeta.elVal);
+                const elementItem = document.getElementById(stepMeta.elItem);
+                
+                // Clear active/completed classes first
+                elementItem.classList.remove('active', 'completed');
+                
+                if (val !== null && val !== undefined && val !== "") {
+                    elementItem.classList.add('completed');
+                    
+                    if (stepMeta.format) {
+                        elementValue.innerText = stepMeta.prefix + Number(val).toLocaleString('en-IN');
+                    } else {
+                        elementValue.innerText = val + (stepMeta.suffix || '');
+                    }
+                } else {
+                    elementValue.innerText = '-';
+                    // Active indicator is step index + 1
+                    if (step === (index + 1)) {
+                        elementItem.classList.add('active');
+                    }
+                }
+            });
+        }
+
+        // Toggle text inputs vs dropdown lists and quick reply options
+        function toggleInputControls(step, quickReplies) {
+            if (step === 6) {
+                textInputArea.style.display = 'none';
+                stateDropdownArea.style.display = 'flex';
+                stateSelectInput.focus();
+            } else {
+                textInputArea.style.display = 'flex';
+                stateDropdownArea.style.display = 'none';
+                messageInput.focus();
+            }
+
+            if (quickReplies && quickReplies.length > 0) {
+                quickRepliesArea.innerHTML = '';
+                quickReplies.forEach(reply => {
+                    const pill = document.createElement('button');
+                    pill.className = 'quick-reply-pill';
+                    pill.innerText = reply;
+                    pill.onclick = () => sendQuickReply(reply);
+                    quickRepliesArea.appendChild(pill);
+                });
+                quickRepliesArea.style.display = 'flex';
+            } else {
+                quickRepliesArea.style.display = 'none';
+            }
+            
+            scrollToBottom();
+        }
+
+        // Quick reply clicks
+        function sendQuickReply(replyText) {
+            appendMessage(replyText, true);
+            sendPayload(replyText);
+        }
+
+        // Normal text inputs
+        function handleTextSend() {
+            const text = messageInput.value.trim();
+            if (text === "") return;
+            
+            appendMessage(text, true);
+            messageInput.value = "";
+            sendPayload(text);
+        }
+
+        // State selector submission
+        function handleStateSend() {
+            const selectedState = stateSelectInput.value;
+            if (!selectedState) return;
+            
+            appendMessage(selectedState, true);
+            stateSelectInput.selectedIndex = 0;
+            sendPayload(selectedState);
+        }
+
+        // Modal triggers
+        function openDetailsModal(index) {
+            const scheme = activeSchemes[index];
+            if (!scheme) return;
+
+            modalTitle.innerText = scheme.name;
+            modalBadge.innerText = scheme.state;
+            modalMinistry.innerText = scheme.ministry || 'Government Ministry';
+            modalDesc.innerText = scheme.description || 'No description available.';
+            modalBenefits.innerText = scheme.benefits || 'No specific benefit details mentioned.';
+            modalDocs.innerText = scheme.documents || 'None mentioned.';
+            modalApplyBtn.href = scheme.apply_url || '#';
+
+            detailsModal.classList.add('open');
+        }
+
+        // Modal close
+        function closeDetailsModal() {
+            detailsModal.classList.remove('open');
+        }
+
+        // Event Listeners
+        sendBtn.addEventListener('click', handleTextSend);
+        messageInput.addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') {
+                handleTextSend();
+            }
+        });
+
+        stateSendBtn.addEventListener('click', handleStateSend);
+        stateSelectInput.addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') {
+                handleStateSend();
+            }
+        });
+
+        modalCloseBtn.addEventListener('click', closeDetailsModal);
+        detailsModal.addEventListener('click', (e) => {
+            if (e.target === detailsModal) {
+                closeDetailsModal();
+            }
+        });
+    </script>
+</body>
+</html>
